@@ -1,5 +1,4 @@
-
-# go-fibernetia
+# Fibernetia
 
 Lightweight Inertia-like adapter for fasthttp (and compatible with Fiber) — think Gonertia but for Fiber / fasthttp-based apps.
 

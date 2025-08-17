@@ -9,13 +9,11 @@ import (
 
 // CookieFlashProvider implements FlashProvider using cookies.
 type CookieFlashProvider struct {
-	errorCookieName   string
 	historyCookieName string
 }
 
 func NewCookieFlashProvider() *CookieFlashProvider {
 	return &CookieFlashProvider{
-		errorCookieName:   "flash_errors",
 		historyCookieName: "flash_clear_history",
 	}
 }
