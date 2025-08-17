@@ -299,6 +299,14 @@ func (i *Inertia) collectProps(ctx *fasthttp.RequestCtx, props Props) Props {
 		result["errors"] = AlwaysProp{ValidationErrorsFromContext(ctx)}
 	}
 
+	// Add flash message (shared for every request)
+	if i.flash != nil {
+		val, _ := i.flash.Get(ctx, "message")
+		result["flash"] = map[string]any{
+			"message": val,
+		}
+	}
+
 	// Add shared props.
 	i.sharedPropsMu.RLock()
 	maps.Copy(result, i.sharedProps)
