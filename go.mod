@@ -1,4 +1,4 @@
-module go-fibernetia
+module fibernetia
 
 go 1.25.0
 
