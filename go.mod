@@ -1,4 +1,4 @@
-module fibernetia
+module github.com/repiyann/fibernetia
 
 go 1.25.0
 
