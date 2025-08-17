@@ -1,4 +1,4 @@
-package gonertia
+package fibernetia
 
 import (
 	"strings"
