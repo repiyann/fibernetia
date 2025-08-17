@@ -1,32 +1,26 @@
 package fibernetia
 
 import (
-	"context"
-
-	"github.com/fasthttp/session"
 	"github.com/goccy/go-json"
-	"github.com/valyala/fasthttp"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/session"
 )
 
-// SessionFlashProvider implements FlashProvider using fasthttp/session.
+// SessionFlashProvider implements FlashProvider using github.com/gofiber/session.
 type SessionFlashProvider struct {
-	store *session.Session
+	store *session.Store
 }
 
-func NewSessionFlashProvider(store *session.Session) *SessionFlashProvider {
+func NewSessionFlashProvider(store *session.Store) *SessionFlashProvider {
 	return &SessionFlashProvider{store: store}
 }
 
-func (p *SessionFlashProvider) Flash(ctx context.Context, key string, val any) error {
-	fctx, ok := ctx.(*fasthttp.RequestCtx)
-	if !ok {
-		return nil
-	}
-	data, err := json.Marshal(val)
+func (p *SessionFlashProvider) Flash(c *fiber.Ctx, key string, val any) error {
+	sess, err := p.store.Get(c)
 	if err != nil {
 		return err
 	}
-	sess, err := p.store.Get(fctx)
+	data, err := json.Marshal(val)
 	if err != nil {
 		return err
 	}
@@ -34,12 +28,8 @@ func (p *SessionFlashProvider) Flash(ctx context.Context, key string, val any) e
 	return nil
 }
 
-func (p *SessionFlashProvider) Get(ctx context.Context, key string) (any, error) {
-	fctx, ok := ctx.(*fasthttp.RequestCtx)
-	if !ok {
-		return nil, nil
-	}
-	sess, err := p.store.Get(fctx)
+func (p *SessionFlashProvider) Get(c *fiber.Ctx, key string) (any, error) {
+	sess, err := p.store.Get(c)
 	if err != nil {
 		return nil, err
 	}
@@ -56,12 +46,8 @@ func (p *SessionFlashProvider) Get(ctx context.Context, key string) (any, error)
 	return v, nil
 }
 
-func (p *SessionFlashProvider) FlashClearHistory(ctx context.Context) error {
-	fctx, ok := ctx.(*fasthttp.RequestCtx)
-	if !ok {
-		return nil
-	}
-	sess, err := p.store.Get(fctx)
+func (p *SessionFlashProvider) FlashClearHistory(c *fiber.Ctx) error {
+	sess, err := p.store.Get(c)
 	if err != nil {
 		return err
 	}
@@ -69,12 +55,8 @@ func (p *SessionFlashProvider) FlashClearHistory(ctx context.Context) error {
 	return nil
 }
 
-func (p *SessionFlashProvider) ShouldClearHistory(ctx context.Context) (bool, error) {
-	fctx, ok := ctx.(*fasthttp.RequestCtx)
-	if !ok {
-		return false, nil
-	}
-	sess, err := p.store.Get(fctx)
+func (p *SessionFlashProvider) ShouldClearHistory(c *fiber.Ctx) (bool, error) {
+	sess, err := p.store.Get(c)
 	if err != nil {
 		return false, err
 	}
