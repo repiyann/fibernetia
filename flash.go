@@ -3,84 +3,85 @@ package fibernetia
 import (
 	"context"
 
+	"github.com/fasthttp/session"
 	"github.com/goccy/go-json"
 	"github.com/valyala/fasthttp"
 )
 
-// CookieFlashProvider implements FlashProvider using cookies.
-type CookieFlashProvider struct {
-	historyCookieName string
+// SessionFlashProvider implements FlashProvider using fasthttp/session.
+type SessionFlashProvider struct {
+	store *session.Session
 }
 
-func NewCookieFlashProvider() *CookieFlashProvider {
-	return &CookieFlashProvider{
-		historyCookieName: "flash_clear_history",
-	}
+func NewSessionFlashProvider(store *session.Session) *SessionFlashProvider {
+	return &SessionFlashProvider{store: store}
 }
 
-func (p *CookieFlashProvider) Flash(ctx context.Context, key string, val any) error {
+func (p *SessionFlashProvider) Flash(ctx context.Context, key string, val any) error {
 	fctx, ok := ctx.(*fasthttp.RequestCtx)
 	if !ok {
 		return nil
 	}
-
-	data, _ := json.Marshal(val)
-	cookie := fasthttp.AcquireCookie()
-	cookie.SetKey("flash_" + key)
-	cookie.SetValueBytes(data)
-	cookie.SetPath("/")
-	fctx.Response.Header.SetCookie(cookie)
+	data, err := json.Marshal(val)
+	if err != nil {
+		return err
+	}
+	sess, err := p.store.Get(fctx)
+	if err != nil {
+		return err
+	}
+	sess.Set("flash_"+key, data)
 	return nil
 }
 
-func (p *CookieFlashProvider) Get(ctx context.Context, key string) (any, error) {
+func (p *SessionFlashProvider) Get(ctx context.Context, key string) (any, error) {
 	fctx, ok := ctx.(*fasthttp.RequestCtx)
 	if !ok {
 		return nil, nil
 	}
-
-	cookie := fctx.Request.Header.Cookie("flash_" + key)
-	if len(cookie) == 0 {
+	sess, err := p.store.Get(fctx)
+	if err != nil {
+		return nil, err
+	}
+	val := sess.Get("flash_" + key)
+	if val == nil {
 		return nil, nil
 	}
-
 	var v any
-	_ = json.Unmarshal(cookie, &v)
-
-	// delete after read
-	fctx.Response.Header.DelCookie("flash_" + key)
-
+	err = json.Unmarshal(val.([]byte), &v)
+	if err != nil {
+		return nil, err
+	}
+	sess.Delete("flash_" + key) // delete after read
 	return v, nil
 }
 
-func (p *CookieFlashProvider) FlashClearHistory(ctx context.Context) error {
+func (p *SessionFlashProvider) FlashClearHistory(ctx context.Context) error {
 	fctx, ok := ctx.(*fasthttp.RequestCtx)
 	if !ok {
 		return nil
 	}
-
-	cookie := fasthttp.AcquireCookie()
-	cookie.SetKey(p.historyCookieName)
-	cookie.SetValue("1")
-	cookie.SetPath("/")
-	fctx.Response.Header.SetCookie(cookie)
-
+	sess, err := p.store.Get(fctx)
+	if err != nil {
+		return err
+	}
+	sess.Set("flash_clear_history", true)
 	return nil
 }
 
-func (p *CookieFlashProvider) ShouldClearHistory(ctx context.Context) (bool, error) {
+func (p *SessionFlashProvider) ShouldClearHistory(ctx context.Context) (bool, error) {
 	fctx, ok := ctx.(*fasthttp.RequestCtx)
 	if !ok {
 		return false, nil
 	}
-
-	cookie := fctx.Request.Header.Cookie(p.historyCookieName)
-	if len(cookie) == 0 {
+	sess, err := p.store.Get(fctx)
+	if err != nil {
+		return false, err
+	}
+	val := sess.Get("flash_clear_history")
+	if val == nil {
 		return false, nil
 	}
-
-	// Delete after read
-	fctx.Response.Header.DelCookie(p.historyCookieName)
-
+	sess.Delete("flash_clear_history") // delete after read
 	return true, nil
 }
