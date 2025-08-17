@@ -199,7 +199,7 @@ func (i *Inertia) flashValidationErrorsFromContext(ct context.Context) {
 		return
 	}
 
-	err := i.flash.FlashErrors(ct, validationErrors)
+	err := i.flash.Flash(ct, "errors", validationErrors)
 	if err != nil {
 		i.logger.Printf("cannot flash validation errors: %s", err)
 	}

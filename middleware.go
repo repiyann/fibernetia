@@ -56,13 +56,14 @@ func (i *Inertia) resolveValidationErrors(ctx *fasthttp.RequestCtx) *fasthttp.Re
 		return ctx
 	}
 
-	validationErrors, err := i.flash.GetErrors(ctx)
+	val, err := i.flash.Get(ctx, "errors")
 	if err != nil {
 		i.logger.Printf("get validation errors from flash provider error: %s", err)
 		return ctx
 	}
 
-	if len(validationErrors) == 0 {
+	validationErrors, ok := val.(ValidationErrors)
+	if !ok || len(validationErrors) == 0 {
 		return ctx
 	}
 

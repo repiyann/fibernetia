@@ -137,8 +137,8 @@ type Logger interface {
 
 // FlashProvider defines an interface for a flash data provider.
 type FlashProvider interface {
-	FlashErrors(ctx context.Context, errors ValidationErrors) error
-	GetErrors(ctx context.Context) (ValidationErrors, error)
+	Flash(ctx context.Context, key string, val any) error
+	Get(ctx context.Context, key string) (any, error)
 	ShouldClearHistory(ctx context.Context) (bool, error)
 	FlashClearHistory(ctx context.Context) error
 }
